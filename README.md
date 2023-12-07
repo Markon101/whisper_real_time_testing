@@ -31,4 +31,6 @@ scoop install ffmpeg
 
 For more information on Whisper please see https://github.com/openai/whisper
 
+This version I forked and worked on does automatic typing in a focused text box (browser etc) and it works decently at the given sample rate and buffer sizes. Please note that Whisper is not really built for this, but it performs well enough to be extremely useful.
+
 The code in this repository is public domain.
