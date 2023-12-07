@@ -10,7 +10,7 @@ import whisper
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
-CHUNK = 16384  # This can be adjusted
+CHUNK = 8192*4 # audio chunk size
 
 # Initialize Whisper model
 model = whisper.load_model("base")  # Base model for efficiency
@@ -28,23 +28,25 @@ def audio_capture(audio_queue):
 
 # Function for transcription and typing
 async def transcribe_and_type(audio_queue):
+    audio_buffer = np.array([], dtype=np.float32)
     while True:
         if not audio_queue.empty():
             audio_chunk = audio_queue.get()
-            # Convert byte data to numpy array and make it writable
             audio_data = np.frombuffer(audio_chunk, dtype=np.int16).copy()
-            # Convert data to float32 as expected by PyTorch
             audio_data = audio_data.astype(np.float32)
-            # Normalize audio data
             audio_data /= np.iinfo(np.int16).max
-            # Transcribe audio
-            try:
-                result = model.transcribe(audio_data)
-                text = result["text"]
-                print(f"Transcribed: {text}")
-                pyautogui.write(text)  # Using pyautogui for typing
-            except Exception as e:
-                print(f"Error during transcription: {e}")
+            audio_buffer = np.concatenate((audio_buffer, audio_data))
+
+            # Process the buffer if it's long enough
+            if len(audio_buffer) >= RATE * 6:  # One second of audio
+                try:
+                    result = model.transcribe(audio_buffer)
+                    text = result["text"]
+                    print(f"Transcribed: {text}")
+                    pyautogui.write(text)
+                    audio_buffer = np.array([], dtype=np.float32)  # Clear the buffer
+                except Exception as e:
+                    print(f"Error during transcription: {e}")
 
 # Main function
 def main():
