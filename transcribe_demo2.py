@@ -20,7 +20,7 @@ def audio_capture(audio_queue):
     audio = pyaudio.PyAudio()
     stream = audio.open(format=FORMAT, channels=CHANNELS,
                         rate=RATE, input=True,
-                        frames_per_buffer=CHUNK)
+                        frames_per_buffer=CHUNK, input_device_index=21)
     print("Audio capture started...")
     while True:
         data = stream.read(CHUNK, exception_on_overflow=False)
@@ -38,7 +38,7 @@ async def transcribe_and_type(audio_queue):
             audio_buffer = np.concatenate((audio_buffer, audio_data))
 
             # Process the buffer if it's long enough
-            if len(audio_buffer) >= RATE * 6:  # One second of audio
+            if len(audio_buffer) >= RATE * 10:  # One second of audio
                 try:
                     result = model.transcribe(audio_buffer)
                     text = result["text"]
